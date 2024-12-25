@@ -1,5 +1,4 @@
 type Language = string;
-
 type TranslationLoader = (lang: Language) => Promise<Record<string, unknown>>;
 
 interface InitOptions {
@@ -33,6 +32,7 @@ class LanguageObserver {
 
   private checkInitialLanguage(): void {
     const detectedLang = this.detectLanguageFromClass();
+
     void this.loadLanguage(detectedLang);
   }
 
@@ -50,12 +50,15 @@ class LanguageObserver {
   public loadLanguage(lang: Language): Promise<void> {
     return new Promise<void>((resolve) => {
       const map = globalThis.translations;
+
       if (map[lang]) {
         this.lang = lang;
       } else {
         this.lang = 'en';
       }
+
       this.applyTranslations();
+
       resolve();
     });
   }
