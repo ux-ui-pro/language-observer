@@ -12,7 +12,7 @@ declare global {
 }
 
 class LanguageObserver {
-  private lang: Language = 'en';
+  private lang: Language = 'ru';
   private observer: MutationObserver | null = null;
 
   constructor() {
@@ -41,10 +41,10 @@ class LanguageObserver {
       cls.startsWith('locale-'),
     );
 
-    const lang = localeClass ? localeClass.replace('locale-', '') : 'en';
+    const lang = localeClass ? localeClass.replace('locale-', '') : 'ru';
     const map = globalThis.translations;
 
-    return map[lang] ? lang : 'en';
+    return map[lang] ? lang : 'ru';
   }
 
   public loadLanguage(lang: Language): Promise<void> {
@@ -54,7 +54,7 @@ class LanguageObserver {
       if (map[lang]) {
         this.lang = lang;
       } else {
-        this.lang = 'en';
+        this.lang = 'ru';
       }
 
       this.applyTranslations();
