@@ -1,6 +1,6 @@
 {
   "name": "language-observer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "The LanguageObserver class provides a simple way to manage internationalization in your web application. It automates the process of applying translations and simplifies support for multiple languages.",
   "author": "ux-ui.pro",
   "license": "MIT",

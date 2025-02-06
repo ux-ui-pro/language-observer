@@ -31,9 +31,29 @@ class LanguageObserver {
   }
 
   private checkInitialLanguage(): void {
+    const paramLang = this.detectLanguageFromParams();
+
+    if (paramLang) {
+      void this.loadLanguage(paramLang);
+      return;
+    }
+
     const detectedLang = this.detectLanguageFromClass();
 
     void this.loadLanguage(detectedLang);
+  }
+
+  private detectLanguageFromParams(): Language | null {
+    if (typeof window === 'undefined') return null; // на случай, если этот код будет выполняться не в браузере
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramLang = urlParams.get('land-geo');
+
+    if (paramLang && globalThis.translations[paramLang]) {
+      return paramLang;
+    }
+
+    return null;
   }
 
   private detectLanguageFromClass(): Language {
