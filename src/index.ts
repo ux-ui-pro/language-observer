@@ -35,6 +35,7 @@ class LanguageObserver {
 
     if (paramLang) {
       void this.loadLanguage(paramLang);
+
       return;
     }
 
@@ -44,12 +45,14 @@ class LanguageObserver {
   }
 
   private detectLanguageFromParams(): Language | null {
-    if (typeof window === 'undefined') return null; // на случай, если этот код будет выполняться не в браузере
+    if (typeof window === 'undefined') return null;
 
     const urlParams = new URLSearchParams(window.location.search);
     const paramLang = urlParams.get('land-geo');
 
     if (paramLang && globalThis.translations[paramLang]) {
+      this.updateBodyClass(paramLang);
+
       return paramLang;
     }
 
@@ -65,6 +68,14 @@ class LanguageObserver {
     const map = globalThis.translations;
 
     return map[lang] ? lang : 'ru';
+  }
+
+  private updateBodyClass(lang: Language): void {
+    Array.from(document.body.classList)
+      .filter((cls) => cls.startsWith('locale-'))
+      .forEach((cls) => document.body.classList.remove(cls));
+
+    document.body.classList.add(`locale-${lang}`);
   }
 
   public loadLanguage(lang: Language): Promise<void> {
@@ -158,6 +169,8 @@ class LanguageObserver {
     const { lang } = options;
 
     if (lang) {
+      this.updateBodyClass(lang);
+
       void this.loadLanguage(lang);
     }
   }
