@@ -22,7 +22,6 @@ export default [
       globals: {
         ...globals.browser,
         ...globals.es2022,
-        globalThis: 'readonly',
       },
     },
     plugins: {
@@ -51,8 +50,6 @@ export default [
           'newlines-between': 'always',
         },
       ],
-      '@typescript-eslint/triple-slash-reference': 'off',
-      '@typescript-eslint/no-empty-interface': 'off',
       'import/no-unresolved': 'error',
       'import/no-duplicates': 'error',
       'max-len': [

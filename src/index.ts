@@ -1,14 +1,14 @@
+type TranslationDictionary = Record<string, unknown>;
+type TranslationsMap = Record<string, TranslationDictionary | undefined>;
 type Language = string;
-type TranslationLoader = (lang: Language) => Promise<Record<string, unknown>>;
+type TranslationLoader = (lang: Language) => Promise<TranslationDictionary>;
 
 interface InitOptions {
   lang?: string;
 }
 
 declare global {
-  var translations: {
-    [lang: string]: Record<string, unknown>;
-  };
+  var translations: TranslationsMap;
 }
 
 class LanguageObserver {
@@ -20,14 +20,25 @@ class LanguageObserver {
     this.checkInitialLanguage();
   }
 
-  static getNestedTranslation(obj: Record<string, unknown>, path: string): unknown {
-    return path.split('.').reduce((acc: unknown, part: string) => {
+  static getNestedTranslation(obj: TranslationDictionary, path: string): unknown {
+    return path.split('.').reduce<unknown>((acc, part) => {
       if (acc && typeof acc === 'object' && part in acc) {
-        return (acc as Record<string, unknown>)[part];
+        return (acc as TranslationDictionary)[part];
       }
 
       return undefined;
     }, obj);
+  }
+
+  private safeGetTranslation(
+    data: TranslationDictionary | undefined,
+    key: string,
+  ): string | undefined {
+    if (!data) return undefined;
+
+    const result = LanguageObserver.getNestedTranslation(data, key);
+
+    return typeof result === 'string' ? result : undefined;
   }
 
   private checkInitialLanguage(): void {
@@ -65,9 +76,8 @@ class LanguageObserver {
     );
 
     const lang = localeClass ? localeClass.replace('locale-', '') : 'ru';
-    const map = globalThis.translations;
 
-    return map[lang] ? lang : 'ru';
+    return globalThis.translations[lang] ? lang : 'ru';
   }
 
   private updateBodyClass(lang: Language): void {
@@ -80,7 +90,7 @@ class LanguageObserver {
 
   public loadLanguage(lang: Language): Promise<void> {
     return new Promise<void>((resolve) => {
-      const map = globalThis.translations;
+      const map: TranslationsMap = globalThis.translations;
 
       if (map[lang]) {
         this.lang = lang;
@@ -95,10 +105,13 @@ class LanguageObserver {
   }
 
   public applyTranslations(): void {
-    const map = globalThis.translations;
-    const langData = map[this.lang];
+    const map: TranslationsMap = globalThis.translations;
+    const langData: TranslationDictionary | undefined = map[this.lang];
+    const defaultLangData: TranslationDictionary | undefined = map['ru'];
 
-    if (!langData) return;
+    if (!langData) {
+      return;
+    }
 
     const elements = document.querySelectorAll('[data-i18n], [data-i18n-attr]');
 
@@ -107,9 +120,13 @@ class LanguageObserver {
       const attrKeys = el.getAttribute('data-i18n-attr');
 
       if (key) {
-        const translation = LanguageObserver.getNestedTranslation(langData, key);
+        let translation: string | undefined = this.safeGetTranslation(langData, key);
 
-        if (typeof translation === 'string') {
+        if (!translation && defaultLangData) {
+          translation = this.safeGetTranslation(defaultLangData, key);
+        }
+
+        if (translation) {
           this.updateElementText(el, translation);
         }
       }
@@ -123,11 +140,15 @@ class LanguageObserver {
           return;
         }
 
-        Object.entries(attrMap).forEach(([attr, transKey]) => {
-          const attrTranslation = LanguageObserver.getNestedTranslation(langData, transKey);
+        Object.entries(attrMap).forEach(([attrName, transKey]) => {
+          let attrTranslation = this.safeGetTranslation(langData, transKey);
 
-          if (typeof attrTranslation === 'string') {
-            el.setAttribute(attr, attrTranslation);
+          if (!attrTranslation && defaultLangData) {
+            attrTranslation = this.safeGetTranslation(defaultLangData, transKey);
+          }
+
+          if (attrTranslation) {
+            el.setAttribute(attrName, attrTranslation);
           }
         });
       }
@@ -148,7 +169,7 @@ class LanguageObserver {
 
   private initializeObserver(): void {
     this.observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
+      for (const mutation of mutations) {
         if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
           const detectedLang = this.detectLanguageFromClass();
 
@@ -156,7 +177,7 @@ class LanguageObserver {
             void this.loadLanguage(detectedLang);
           }
         }
-      });
+      }
     });
 
     this.observer.observe(document.body, {
@@ -183,7 +204,10 @@ class LanguageObserver {
     lang: Language,
     translationLoader: TranslationLoader,
   ): Promise<void> {
-    globalThis.translations[lang] = await translationLoader(lang);
+    const loadedTranslations = await translationLoader(lang);
+    const map: TranslationsMap = globalThis.translations;
+
+    map[lang] = loadedTranslations;
 
     if (lang === this.lang) {
       this.applyTranslations();
