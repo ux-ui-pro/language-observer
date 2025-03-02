@@ -9,7 +9,7 @@
 [![GitHub package version](https://img.shields.io/github/package-json/v/ux-ui-pro/language-observer.svg)](https://github.com/ux-ui-pro/language-observer)
 [![NPM Downloads](https://img.shields.io/npm/dm/language-observer.svg?style=flat)](https://www.npmjs.org/package/language-observer)
 
-<sup>1kB gzipped</sup>
+<sup>1.2kB gzipped</sup>
 
 <a href="https://codepen.io/ux-ui/pen/RwXOJJx">Demo</a>
 

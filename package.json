@@ -1,6 +1,6 @@
 {
   "name": "language-observer",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "The LanguageObserver class provides a simple way to manage internationalization in your web application. It automates the process of applying translations and simplifies support for multiple languages.",
   "author": "ux-ui.pro",
   "license": "MIT",
@@ -24,9 +24,9 @@
   "source": "src/index.ts",
   "main": "dist/index.cjs.js",
   "module": "dist/index.es.js",
+  "browser": "./dist/index.umd.js",
   "types": "dist/index.d.ts",
   "exports": {
-    "types": "./dist/index.d.ts",
     "import": "./dist/index.es.js",
     "require": "./dist/index.cjs.js"
   },
