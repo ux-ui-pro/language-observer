@@ -20,7 +20,7 @@ class LanguageObserver {
     this.checkInitialLanguage();
   }
 
-  static getNestedTranslation(obj: TranslationDictionary, path: string): unknown {
+  public static getNestedTranslation(obj: TranslationDictionary, path: string): unknown {
     return path.split('.').reduce<unknown>((acc, part) => {
       if (acc && typeof acc === 'object' && part in acc) {
         return (acc as TranslationDictionary)[part];
@@ -46,13 +46,11 @@ class LanguageObserver {
 
     if (paramLang) {
       void this.loadLanguage(paramLang);
+    } else {
+      const detectedLang = this.detectLanguageFromClass();
 
-      return;
+      void this.loadLanguage(detectedLang);
     }
-
-    const detectedLang = this.detectLanguageFromClass();
-
-    void this.loadLanguage(detectedLang);
   }
 
   private detectLanguageFromParams(): Language | null {
@@ -81,37 +79,28 @@ class LanguageObserver {
   }
 
   private updateBodyClass(lang: Language): void {
-    Array.from(document.body.classList)
-      .filter((cls) => cls.startsWith('locale-'))
-      .forEach((cls) => document.body.classList.remove(cls));
+    document.body.classList.forEach((cls) => {
+      if (cls.startsWith('locale-')) {
+        document.body.classList.remove(cls);
+      }
+    });
 
     document.body.classList.add(`locale-${lang}`);
   }
 
-  public loadLanguage(lang: Language): Promise<void> {
-    return new Promise<void>((resolve) => {
-      const map: TranslationsMap = globalThis.translations;
+  public loadLanguage(lang: Language): void {
+    const map: TranslationsMap = globalThis.translations;
 
-      if (map[lang]) {
-        this.lang = lang;
-      } else {
-        this.lang = 'ru';
-      }
-
-      this.applyTranslations();
-
-      resolve();
-    });
+    this.lang = map[lang] ? lang : 'ru';
+    this.applyTranslations();
   }
 
   public applyTranslations(): void {
     const map: TranslationsMap = globalThis.translations;
-    const langData: TranslationDictionary | undefined = map[this.lang];
-    const defaultLangData: TranslationDictionary | undefined = map['ru'];
+    const langData = map[this.lang];
+    const defaultLangData = map['ru'];
 
-    if (!langData) {
-      return;
-    }
+    if (!langData) return;
 
     const elements = document.querySelectorAll('[data-i18n], [data-i18n-attr]');
 
@@ -120,7 +109,7 @@ class LanguageObserver {
       const attrKeys = el.getAttribute('data-i18n-attr');
 
       if (key) {
-        let translation: string | undefined = this.safeGetTranslation(langData, key);
+        let translation = this.safeGetTranslation(langData, key);
 
         if (!translation && defaultLangData) {
           translation = this.safeGetTranslation(defaultLangData, key);
@@ -156,7 +145,7 @@ class LanguageObserver {
   }
 
   private updateElementText(el: Element, translation: string): void {
-    if (el.childNodes.length) {
+    if (el.hasChildNodes()) {
       el.childNodes.forEach((node) => {
         if (node.nodeType === Node.TEXT_NODE) {
           node.textContent = translation;
