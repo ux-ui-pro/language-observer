@@ -17,7 +17,6 @@ class LanguageObserver {
 
   constructor() {
     this.initializeObserver();
-    this.checkInitialLanguage();
   }
 
   public static getNestedTranslation(obj: TranslationDictionary, path: string): unknown {
@@ -25,7 +24,6 @@ class LanguageObserver {
       if (acc && typeof acc === 'object' && part in acc) {
         return (acc as TranslationDictionary)[part];
       }
-
       return undefined;
     }, obj);
   }
@@ -35,20 +33,19 @@ class LanguageObserver {
     key: string,
   ): string | undefined {
     if (!data) return undefined;
-
     const result = LanguageObserver.getNestedTranslation(data, key);
-
     return typeof result === 'string' ? result : undefined;
   }
 
   private checkInitialLanguage(): void {
+    if (this.lang && this.lang !== 'ru') return;
+
     const paramLang = this.detectLanguageFromParams();
 
     if (paramLang) {
       void this.loadLanguage(paramLang);
     } else {
       const detectedLang = this.detectLanguageFromClass();
-
       void this.loadLanguage(detectedLang);
     }
   }
@@ -61,7 +58,6 @@ class LanguageObserver {
 
     if (paramLang && globalThis.translations[paramLang]) {
       this.updateBodyClass(paramLang);
-
       return paramLang;
     }
 
@@ -74,7 +70,6 @@ class LanguageObserver {
     );
 
     const lang = localeClass ? localeClass.replace('locale-', '') : 'ru';
-
     return globalThis.translations[lang] ? lang : 'ru';
   }
 
@@ -110,7 +105,6 @@ class LanguageObserver {
 
       if (key) {
         let translation = this.safeGetTranslation(langData, key);
-
         if (!translation && defaultLangData) {
           translation = this.safeGetTranslation(defaultLangData, key);
         }
@@ -131,7 +125,6 @@ class LanguageObserver {
 
         Object.entries(attrMap).forEach(([attrName, transKey]) => {
           let attrTranslation = this.safeGetTranslation(langData, transKey);
-
           if (!attrTranslation && defaultLangData) {
             attrTranslation = this.safeGetTranslation(defaultLangData, transKey);
           }
@@ -180,8 +173,10 @@ class LanguageObserver {
 
     if (lang) {
       this.updateBodyClass(lang);
-
+      this.lang = lang;
       void this.loadLanguage(lang);
+    } else {
+      this.checkInitialLanguage();
     }
   }
 
